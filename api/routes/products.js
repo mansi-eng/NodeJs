@@ -6,13 +6,25 @@ const Product = require("../models/product");
 //localhost:8000/products/
 router.get("/", (req, res, next) => {
   Product.find()
+    .select("name price _id")
     .exec()
     .then((data) => {
-      console.log(data);
-      res.status(200).json({
-        message: "fetched product data",
-        Product_data: data,
-      });
+      //  console.log(data);
+      const response = {
+        count: data.length,
+        products: data.map((item) => {
+          return {
+            name: item.name,
+            price: item.price,
+            id: item._id,
+            request: {
+              type: "GET",
+              url: "localhost:8000/products/" + item._id,
+            },
+          };
+        }),
+      };
+      res.status(200).json(response);
     })
     .catch((err) => {
       console.log("err");
@@ -33,15 +45,22 @@ router.post("/", (req, res, next) => {
   product
     .save()
     .then((result) => {
-      console.log(result);
+      res.status(201).json({
+        message: "success product created ",
+        createdProduct: {
+          name: result.name,
+          price: result.price,
+          id: result._id,
+          request: {
+            type: "GET",
+            url: "localhost:8000/products/" + result.id,
+          },
+        },
+      });
     })
     .catch((err) => {
       console.log(err);
     });
-  res.status(201).json({
-    message: "success product created ",
-    createdProduct: product,
-  });
 });
 
 //localost:8000/prodcuts/productid
